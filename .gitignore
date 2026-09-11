@@ -1,0 +1,61 @@
+# ============================================================
+#  AI-DESK-DEV .gitignore
+#  最優先の目的: 業務データ（機密情報）を GitHub に出さないこと
+# ============================================================
+
+# ── 1. 配布物フォルダ AI-DESK\ はホワイトリスト方式 ──────────
+#
+# AI-DESK\ は見た目が完成品のインスタンスなので、開発中にうっかり
+# 実際のタスクフォルダを作ってしまうことがある。既知の配布物だけを
+# 追跡し、それ以外は何が増えても追跡しない。
+#
+# ※ 配布物にファイルを追加したら、ここにも「!」行を足すこと。
+#    足し忘れると push されない（＝安全側に倒れる）。
+
+/AI-DESK/**
+
+!/AI-DESK/CLAUDE.md
+!/AI-DESK/GEMINI.md
+!/AI-DESK/README.md
+!/AI-DESK/PROFILE.example.md
+
+!/AI-DESK/.ai-desk/
+!/AI-DESK/.ai-desk/VERSION
+
+!/AI-DESK/.claude/
+!/AI-DESK/.claude/settings.json
+!/AI-DESK/.claude/skills/
+!/AI-DESK/.claude/skills/**
+
+!/AI-DESK/bin/
+!/AI-DESK/bin/**
+
+!/AI-DESK/task_template/
+!/AI-DESK/task_template/**
+
+# ── 2. サイト固有ファイル（配布しない・公開しない）──────────
+PROFILE.md
+settings.local.json
+.claude/settings.local.json
+
+# ── 3. 参考資料の置き場（Z: から持ってきた旧ファイル）────────
+/_参考/
+
+# ── 4. 業務ファイルの形式そのもの（保険）────────────────────
+*.xlsx
+*.xls
+*.docx
+*.doc
+*.pptx
+*.pdf
+*.jtd
+*.exe
+
+# ── 5. OS・エディタが作るもの ──────────────────────────────
+Thumbs.db
+desktop.ini
+~$*
+.vscode/
+.idea/
+__pycache__/
+*.pyc
