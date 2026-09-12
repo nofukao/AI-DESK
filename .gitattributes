@@ -1,0 +1,30 @@
+# 改行コードは作業ツリー側で CRLF に統一する（Windows 専用の環境のため）。
+# リポジトリ内部は LF で保存される。
+#
+# ★BOM 付き UTF-8 の .ps1 について
+#   PowerShell 5.1 は BOM なし UTF-8 を cp932 と誤読し、日本語が化けて構文エラーになる。
+#   そのため .ps1 は BOM 付きで保存する運用にしている。
+#   git の改行変換は BOM のバイト列には触れないので、この設定で BOM は保たれる。
+#   （core.autocrlf ではなく .gitattributes で指定することで、環境差の影響を受けない）
+
+* text=auto eol=crlf
+
+# ★シェルスクリプトだけは LF でなければならない
+#   現時点で .sh は1つも無い（AI-DESK は Windows 専用）。
+#   将来 macOS / Linux 対応で .sh を足したとき、CRLF が混入すると
+#   「bad interpreter: /bin/sh^M」で即座に動かなくなる。1行なので先に入れておく。
+*.sh text eol=lf
+
+# 変換してはいけないもの
+*.png  binary
+*.jpg  binary
+*.gif  binary
+*.ico  binary
+*.pdf  binary
+*.xlsx binary
+*.docx binary
+*.pptx binary
+*.zip  binary
+*.exe  binary
+
+

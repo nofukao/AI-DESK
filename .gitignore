@@ -24,6 +24,7 @@
 
 !/AI-DESK/.claude/
 !/AI-DESK/.claude/settings.json
+!/AI-DESK/.claude/settings.local.json.example
 !/AI-DESK/.claude/skills/
 !/AI-DESK/.claude/skills/**
 
@@ -40,6 +41,15 @@ settings.local.json
 
 # ── 3. 参考資料の置き場（Z: から持ってきた旧ファイル）────────
 /_参考/
+
+# ── 3-2. 構築時の指示文書（実在の個人名・取引先名を含むため追跡しない）──
+#
+# 人が読み書きするために docs\ に置いてあるが、中に実在の固有名詞が入っている。
+# このリポジトリは Public 化の可能性があるため、追跡対象から外す。
+# （docs\設計.md / docs\移行手順.md など、こちらで書く文書は追跡する）
+
+/docs/初期構築プロンプト.md
+/docs/(参考_人間が読むもの)AI-DESK-DEV構築手順書.md
 
 # ── 4. 業務ファイルの形式そのもの（保険）────────────────────
 *.xlsx

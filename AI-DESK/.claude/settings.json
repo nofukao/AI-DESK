@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "defaultMode": "default",
+    "additionalDirectories": [],
+    "allow": [
+      "Write(*/out/**)",
+      "Edit(*/out/**)"
+    ],
+    "deny": [
+      "Bash(rm:*)",
+      "Bash(rmdir:*)",
+      "Bash(mv:*)",
+      "Bash(del:*)",
+      "Bash(git:*)",
+      "PowerShell(Remove-Item:*)",
+      "PowerShell(Move-Item:*)",
+      "PowerShell(Clear-Content:*)",
+      "PowerShell(git:*)"
+    ],
+    "disableBypassPermissionsMode": "disable"
+  }
+}
