@@ -170,8 +170,8 @@ Write-Host ""
 if ($target -match '^([A-Za-z]):\\') {
     $destDrive = Get-PSDrive -Name $Matches[1] -PSProvider FileSystem -ErrorAction SilentlyContinue
     if ($destDrive -and $destDrive.DisplayRoot -and $destDrive.DisplayRoot.StartsWith('\\')) {
-        Write-Host "  ※ ネットワークドライブの上に作りました。使う PC ごとに一度、履歴の一覧を直す作業が要ります。"
-        Write-Host "     「疎通確認」が案内します（中身は bin\setup_history.ps1 です）。"
+        Write-Host "  ※ ネットワークドライブの上に作りました。Claude Code の不具合で履歴の一覧が出ない問題は、"
+        Write-Host "     各 PC で最初にセッションを始めたときに、自動で直ります（bin\setup_history.ps1）。"
         Write-Host ""
     }
 }

@@ -47,6 +47,29 @@
           }
         ]
       }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell.exe",
+            "args": [
+              "-NoProfile",
+              "-NonInteractive",
+              "-ExecutionPolicy",
+              "Bypass",
+              "-File",
+              "${CLAUDE_PROJECT_DIR}\\bin\\setup_history.ps1",
+              "-Path",
+              "${CLAUDE_PROJECT_DIR}",
+              "-Quiet"
+            ],
+            "timeout": 30
+          }
+        ]
+      }
     ]
   },
   "disableAllHooks": false,
