@@ -2,8 +2,11 @@
   "permissions": {
     "additionalDirectories": [
       "Z:/20_営業",
-      "Z:/40_会議",
-      "C:/Users/yamada/Documents/資料"
+      "Z:/40_会議"
+    ],
+    "deny": [
+      "Write(Z:/**)",
+      "Edit(Z:/**)"
     ]
   }
 }

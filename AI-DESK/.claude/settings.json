@@ -1,12 +1,30 @@
 {
   "permissions": {
-    "defaultMode": "default",
+    "defaultMode": "acceptEdits",
     "additionalDirectories": [],
     "allow": [
       "Write(*/out/**)",
       "Edit(*/out/**)"
     ],
     "deny": [
+      "Write(./out/**)",
+      "Edit(./out/**)",
+      "Write(./CLAUDE.md)",
+      "Edit(./CLAUDE.md)",
+      "Write(./GEMINI.md)",
+      "Edit(./GEMINI.md)",
+      "Write(./README.md)",
+      "Edit(./README.md)",
+      "Write(./PROFILE.example.md)",
+      "Edit(./PROFILE.example.md)",
+      "Write(./.claude/settings.json)",
+      "Edit(./.claude/settings.json)",
+      "Write(./.ai-desk/**)",
+      "Edit(./.ai-desk/**)",
+      "Write(./bin/**)",
+      "Edit(./bin/**)",
+      "Write(./task_template/**)",
+      "Edit(./task_template/**)",
       "Bash(rm:*)",
       "Bash(rmdir:*)",
       "Bash(mv:*)",

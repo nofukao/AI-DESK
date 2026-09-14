@@ -9,9 +9,11 @@
   やること:
     1. コピー先が既にあれば、何もせず中止する（上書きしません）
     2. 配布物を丸ごとコピーする（.git は絶対にコピーしません）
-    3. PROFILE.example.md から PROFILE.md を作る（無い場合だけ）
-    4. settings.local.json.example から settings.local.json を作る（無い場合だけ）
-    5. .ai-desk\source.txt に、コピー元のパスを記録する
+    3. .ai-desk\source.txt に、コピー元のパスを記録する
+
+  PROFILE.md と .claude\settings.local.json は、あえて作りません。
+  記入例をそのまま置くと、AI が架空の会社の情報を事実として読み込むためです。
+  作られたインスタンスで claude を起動し、「初期設定」と言えば、対話で作れます。
 
   このスクリプトは、削除・移動を一切行いません。
   終了コード: 0=成功 / 1=中止（メッセージを読んでください）
@@ -126,22 +128,13 @@ catch {
 
 Write-Step ("コピーしたファイル: " + $files.Count + " 個")
 
-# --- 5. サイト固有ファイルを用意する（無い場合だけ）--------------------------
+# --- 5. サイト固有ファイルは、あえて作らない ---------------------------------
+#
+# PROFILE.md と .claude\settings.local.json は作りません。
+# 記入例をそのまま置くと、AI が架空の会社の情報を「この組織の事実」として
+# 読み込んでしまいます。無いほうが安全で、対話の起点としても明確です。
 
-$profileExample = Join-Path $target 'PROFILE.example.md'
-$profileFile    = Join-Path $target 'PROFILE.md'
-if ((Test-Path -LiteralPath $profileExample) -and -not (Test-Path -LiteralPath $profileFile)) {
-    Copy-Item -LiteralPath $profileExample -Destination $profileFile
-    Write-Step "PROFILE.md を作りました（PROFILE.example.md の写しです）"
-}
-
-$claudeDir      = Join-Path $target '.claude'
-$settingExample = Join-Path $claudeDir 'settings.local.json.example'
-$settingFile    = Join-Path $claudeDir 'settings.local.json'
-if ((Test-Path -LiteralPath $settingExample) -and -not (Test-Path -LiteralPath $settingFile)) {
-    Copy-Item -LiteralPath $settingExample -Destination $settingFile
-    Write-Step ".claude\settings.local.json を作りました（.example の写しです）"
-}
+Write-Step "PROFILE.md と settings.local.json は作っていません（「初期設定」で対話で作ります）"
 
 # --- 6. どこから来たかを記録する ---------------------------------------------
 
@@ -163,15 +156,16 @@ Write-Host "  版  : $version"
 Write-Host ""
 Write-Host "次にやってください。"
 Write-Host ""
-Write-Host "  1. PROFILE.md に、あなたの組織の情報を書いてください。"
-Write-Host "     （業態・社内の言葉・資料がどこにあるか。中身は架空の記入例です）"
+Write-Host "  1. そのフォルダで claude を起動してください。"
 Write-Host ""
-Write-Host "  2. .claude\settings.local.json に、読んでよいフォルダを書いてください。"
-Write-Host "     （書き方は同じフォルダの .example と、README.md にあります）"
-Write-Host ""
-Write-Host "  3. そのフォルダで claude を起動し、「疎通確認」と言ってください。"
-Write-Host ""
-Write-Host "  4. 【重要】初回に一度だけ出る「このフォルダを信頼しますか」に、必ず承諾してください。"
+Write-Host "  2. 【重要】初回に一度だけ出る「このフォルダを信頼しますか」に、必ず承諾してください。"
 Write-Host "     ここで断ると設定がすべて無視され、資料を一切読めません。"
+Write-Host ""
+Write-Host "  3. 「初期設定」と言ってください。"
+Write-Host "     対話で、次の2つを作ります。"
+Write-Host "       ・PROFILE.md               この組織の前提知識"
+Write-Host "       ・.claude\settings.local.json  読んでよいフォルダ"
+Write-Host ""
+Write-Host "  4. claude を起動し直してから、「疎通確認」と言ってください。"
 Write-Host ""
 exit 0
