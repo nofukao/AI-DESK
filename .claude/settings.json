@@ -5,7 +5,6 @@
       "Z:/AI-DESK"
     ],
     "allow": [
-      "Write(**)",
       "Edit(**)",
       "Bash(git status:*)",
       "Bash(git diff:*)",
@@ -14,8 +13,7 @@
       "Bash(git commit:*)"
     ],
     "deny": [
-      "Write(Z:/**)",
-      "Edit(Z:/**)",
+      "Edit(//z/**)",
       "Bash(git push --force:*)",
       "Bash(git push -f:*)",
       "Bash(rm -rf:*)",
