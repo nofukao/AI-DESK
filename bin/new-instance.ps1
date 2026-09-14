@@ -11,7 +11,7 @@
     2. 配布物を丸ごとコピーする（.git は絶対にコピーしません）
     3. .ai-desk\source.txt に、コピー元のパスを記録する
 
-  PROFILE.md と .claude\settings.local.json は、あえて作りません。
+  PROFILE.md は、あえて作りません。
   記入例をそのまま置くと、AI が架空の会社の情報を事実として読み込むためです。
   作られたインスタンスで claude を起動し、「初期設定」と言えば、対話で作れます。
 
@@ -130,11 +130,11 @@ Write-Step ("コピーしたファイル: " + $files.Count + " 個")
 
 # --- 5. サイト固有ファイルは、あえて作らない ---------------------------------
 #
-# PROFILE.md と .claude\settings.local.json は作りません。
+# PROFILE.md は作りません。
 # 記入例をそのまま置くと、AI が架空の会社の情報を「この組織の事実」として
 # 読み込んでしまいます。無いほうが安全で、対話の起点としても明確です。
 
-Write-Step "PROFILE.md と settings.local.json は作っていません（「初期設定」で対話で作ります）"
+Write-Step "PROFILE.md は作っていません（「初期設定」で対話で作ります）"
 
 # --- 6. どこから来たかを記録する ---------------------------------------------
 
@@ -159,13 +159,11 @@ Write-Host ""
 Write-Host "  1. そのフォルダで claude を起動してください。"
 Write-Host ""
 Write-Host "  2. 【重要】初回に一度だけ出る「このフォルダを信頼しますか」に、必ず承諾してください。"
-Write-Host "     ここで断ると設定がすべて無視され、資料を一切読めません。"
+Write-Host "     ここで断ると、書き込みの制限（hook）が動きません。"
 Write-Host ""
 Write-Host "  3. 「初期設定」と言ってください。"
-Write-Host "     対話で、次の2つを作ります。"
-Write-Host "       ・PROFILE.md               この組織の前提知識"
-Write-Host "       ・.claude\settings.local.json  読んでよいフォルダ"
+Write-Host "     対話で PROFILE.md（この組織の前提知識）を作ります。"
 Write-Host ""
-Write-Host "  4. claude を起動し直してから、「疎通確認」と言ってください。"
+Write-Host "  4. 「疎通確認」と言ってください。書き込みの制限が効いているかを確かめます。"
 Write-Host ""
 exit 0

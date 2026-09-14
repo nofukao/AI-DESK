@@ -25,6 +25,8 @@
 !/AI-DESK/.claude/
 !/AI-DESK/.claude/settings.json
 !/AI-DESK/.claude/settings.local.json.example
+!/AI-DESK/.claude/hooks/
+!/AI-DESK/.claude/hooks/**
 !/AI-DESK/.claude/skills/
 !/AI-DESK/.claude/skills/**
 

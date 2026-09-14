@@ -1,6 +1,5 @@
 {
   "permissions": {
-    "additionalDirectories": [],
     "allow": [
       "Edit(*/out/**)"
     ],
@@ -11,6 +10,8 @@
       "Edit(/README.md)",
       "Edit(/PROFILE.example.md)",
       "Edit(/.claude/settings.json)",
+      "Edit(/.claude/settings.local.json)",
+      "Edit(/.claude/hooks/**)",
       "Edit(/.ai-desk/**)",
       "Edit(/bin/**)",
       "Edit(/task_template/**)",
@@ -25,5 +26,29 @@
       "PowerShell(git:*)"
     ],
     "disableBypassPermissionsMode": "disable"
-  }
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell.exe",
+            "args": [
+              "-NoProfile",
+              "-NonInteractive",
+              "-ExecutionPolicy",
+              "Bypass",
+              "-File",
+              "${CLAUDE_PROJECT_DIR}\\.claude\\hooks\\guard-write.ps1"
+            ],
+            "timeout": 60
+          }
+        ]
+      }
+    ]
+  },
+  "disableAllHooks": false,
+  "autoMemoryEnabled": false
 }
