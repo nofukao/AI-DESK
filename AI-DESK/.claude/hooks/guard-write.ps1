@@ -14,6 +14,9 @@
   タスクフォルダは、ルート直下のフォルダのうち、次を除いたものです。
     名前が . で始まるもの（.claude、.ai-desk など） / bin / task_template / out
 
+  ネットワークドライブの上の AI-DESK では、Z:\... と \\サーバー\共有\... の2つの書き方が
+  混ざることがあります。その場合は、両方を \\サーバー\共有\... の形に揃えてから比べます。
+
   止め方: 理由を標準エラーと標準出力（JSON）に書き、終了コード 2 で終わります。
   書き込み先を判定できないとき、このスクリプトの中でエラーが起きたときも、止める側に倒します。
 
@@ -97,6 +100,69 @@ function ConvertTo-FullPath {
     return [System.IO.Path]::GetFullPath($p)
 }
 
+function ConvertTo-UncPath {
+    # ネットワークドライブ（Z: など）で始まるパスを、\\サーバー\共有\... の形に直す。
+    # それ以外は、そのまま返す。
+    param([string]$FullPath)
+
+    if ($FullPath -match '^([A-Za-z]):\\') {
+        $drive = Get-PSDrive -Name $Matches[1] -PSProvider FileSystem -ErrorAction SilentlyContinue
+        if ($drive -and $drive.DisplayRoot -and $drive.DisplayRoot.StartsWith('\\')) {
+            return $drive.DisplayRoot.TrimEnd('\') + $FullPath.Substring(2)
+        }
+    }
+    return $FullPath
+}
+
+function Get-WriteDecision {
+    # 書いてよければ $null を、止めるべきなら理由の文を返す。
+    param([string]$Root, [string]$Target)
+
+    # 片方が Z:\...、もう片方が \\サーバー\共有\... の形なら、両方を \\サーバー\共有\... に揃える
+    if ($Root.StartsWith('\\') -ne $Target.StartsWith('\\')) {
+        $Root = ConvertTo-UncPath $Root
+        $Target = ConvertTo-UncPath $Target
+    }
+
+    $prefix = $Root.TrimEnd('\') + '\'
+    if (-not $Target.StartsWith($prefix, [System.StringComparison]::OrdinalIgnoreCase)) {
+        return ('書き込み先 ' + $Target + ' は、この AI-DESK の外です。')
+    }
+
+    $parts = @($Target.Substring($prefix.Length).Split('\') | Where-Object { $_ -ne '' })
+    if ($parts.Count -eq 0) { return ('書き込み先 ' + $Target + ' は、ファイルではありません。') }
+
+    $first = $parts[0]
+    $isTaskFolder = -not ($first.StartsWith('.') -or ($first -ieq 'bin') -or
+                          ($first -ieq 'task_template') -or ($first -ieq 'out'))
+
+    $allowed = (($parts.Count -eq 1) -and ($first -ieq 'PROFILE.md')) -or
+               (($parts.Count -ge 3) -and ($first -ieq '.claude') -and ($parts[1] -ieq 'skills')) -or
+               (($parts.Count -ge 3) -and $isTaskFolder -and ($parts[1] -ieq 'out'))
+
+    if (-not $allowed) {
+        return ('書き込み先 ' + $Target + ' は、書いてよい場所ではありません。')
+    }
+
+    # 途中に、別の場所へのリンクが無いか。
+    # out の中にジャンクションやシンボリックリンクがあると、見た目は out の中でも、
+    # 実際には別の場所（資料フォルダなど）に書き込まれるためです。
+    $current = $prefix.TrimEnd('\')
+    foreach ($part in $parts) {
+        $current = [System.IO.Path]::Combine($current, $part)
+        if (-not ([System.IO.Directory]::Exists($current) -or [System.IO.File]::Exists($current))) { break }
+        $item = Get-Item -LiteralPath $current -Force
+        if ($item.LinkType) {
+            return ('書き込み先の途中に、別の場所へのリンク（' + $item.LinkType + '）があります: ' + $current)
+        }
+    }
+
+    return $null
+}
+
+# 試験のために、関数だけを読み込んだとき（. で読み込んだとき）は、ここで終わる
+if ($MyInvocation.InvocationName -eq '.') { return }
+
 try {
     # --- 1. インスタンスのルート -------------------------------------------------
 
@@ -124,42 +190,10 @@ try {
     $target = ConvertTo-FullPath -PathText $pathText -BaseDir $baseDir
     if (-not $target) { Stop-Write ('書き込み先 "' + $pathText + '" を判定できない形です。') }
 
-    # --- 3. 書いてよい場所か ---------------------------------------------------
+    # --- 3. 書いてよい場所か -----------------------------------------------------
 
-    $prefix = $script:Root + '\'
-    if (-not $target.StartsWith($prefix, [System.StringComparison]::OrdinalIgnoreCase)) {
-        Stop-Write ('書き込み先 ' + $target + ' は、この AI-DESK の外です。')
-    }
-
-    $parts = @($target.Substring($prefix.Length).Split('\') | Where-Object { $_ -ne '' })
-    if ($parts.Count -eq 0) { Stop-Write ('書き込み先 ' + $target + ' は、ファイルではありません。') }
-
-    $first = $parts[0]
-    $isTaskFolder = -not ($first.StartsWith('.') -or ($first -ieq 'bin') -or
-                          ($first -ieq 'task_template') -or ($first -ieq 'out'))
-
-    $allowed = (($parts.Count -eq 1) -and ($first -ieq 'PROFILE.md')) -or
-               (($parts.Count -ge 3) -and ($first -ieq '.claude') -and ($parts[1] -ieq 'skills')) -or
-               (($parts.Count -ge 3) -and $isTaskFolder -and ($parts[1] -ieq 'out'))
-
-    if (-not $allowed) {
-        Stop-Write ('書き込み先 ' + $target + ' は、書いてよい場所ではありません。')
-    }
-
-    # --- 4. 途中に、別の場所へのリンクが無いか -----------------------------------
-    #
-    # out の中にジャンクションやシンボリックリンクがあると、見た目は out の中でも、
-    # 実際には別の場所（資料フォルダなど）に書き込まれるためです。
-
-    $current = $script:Root
-    foreach ($part in $parts) {
-        $current = [System.IO.Path]::Combine($current, $part)
-        if (-not ([System.IO.Directory]::Exists($current) -or [System.IO.File]::Exists($current))) { break }
-        $item = Get-Item -LiteralPath $current -Force
-        if ($item.LinkType) {
-            Stop-Write ('書き込み先の途中に、別の場所へのリンク（' + $item.LinkType + '）があります: ' + $current)
-        }
-    }
+    $reason = Get-WriteDecision -Root $script:Root -Target $target
+    if ($reason) { Stop-Write $reason }
 }
 catch {
     Stop-Write ('書き込み先を判定する途中でエラーが起きました（' + $_.Exception.Message + '）。')

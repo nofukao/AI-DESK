@@ -166,4 +166,13 @@ Write-Host "     対話で PROFILE.md（この組織の前提知識）を作り�
 Write-Host ""
 Write-Host "  4. 「疎通確認」と言ってください。書き込みの制限が効いているかを確かめます。"
 Write-Host ""
+
+if ($target -match '^([A-Za-z]):\\') {
+    $destDrive = Get-PSDrive -Name $Matches[1] -PSProvider FileSystem -ErrorAction SilentlyContinue
+    if ($destDrive -and $destDrive.DisplayRoot -and $destDrive.DisplayRoot.StartsWith('\\')) {
+        Write-Host "  ※ ネットワークドライブの上に作りました。使う PC ごとに一度、履歴の一覧を直す作業が要ります。"
+        Write-Host "     「疎通確認」が案内します（中身は bin\setup_history.ps1 です）。"
+        Write-Host ""
+    }
+}
 exit 0
