@@ -127,7 +127,7 @@ where python
 この AI-DESK は既定で Auto モードで動くため、**確認プロンプトは歯止めになりません。**
 書き込み先を限っているのは、`.claude\settings.json` に登録された **hook**（`.claude\hooks\guard-write.ps1`）です。
 hook は、AI がファイルを書く直前に書き込み先を調べ、
-**`<タスクフォルダ>\out\` の中・`PROFILE.md`・`.claude\skills\` の中**以外への書き込みを、**モードに関係なく**止めます。
+**`<タスクフォルダ>\out\`（`out2\` などを含む）の中・`PROFILE.md`・`.claude\skills\` の中**以外への書き込みを、**モードに関係なく**止めます。
 
 ### 8-1. 仕組みが揃っているか（読むだけ）
 
@@ -205,9 +205,12 @@ hook は、AI がファイルを書く直前に書き込み先を調べ、
 
 - `CLAUDE.md`
 - `GEMINI.md`
-- `.claude\settings.json`（`permissions.allow` に `Edit(*/out/**)` があるか）
+- `.claude\settings.json`（`permissions.allow` に `Edit(*/out/**)` と `Edit(*/out[0-9]*/**)` があるか）
 - `.claude\hooks\guard-write.ps1`
-- `task_template\`
+- `00_タスクテンプレート\`
+
+以前の版の `task_template\` が残っていても、異常ではありません。
+「古いテンプレートの置き場です。中身を確かめて、手で削除して構いません」と伝えてください（**あなたは消さないこと**）。
 - `bin\`
 
 不足していれば、**管理者に更新を依頼するよう案内する**（AI が勝手にコピーしない）。

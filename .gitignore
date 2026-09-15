@@ -32,8 +32,8 @@
 !/AI-DESK/bin/
 !/AI-DESK/bin/**
 
-!/AI-DESK/task_template/
-!/AI-DESK/task_template/**
+!/AI-DESK/00_タスクテンプレート/
+!/AI-DESK/00_タスクテンプレート/**
 
 # ── 2. サイト固有ファイル（配布しない・公開しない）──────────
 PROFILE.md

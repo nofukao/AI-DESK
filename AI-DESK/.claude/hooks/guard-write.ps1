@@ -6,13 +6,14 @@
   AI がファイルを書く直前（Edit / Write / NotebookEdit）に書き込み先を調べ、
   次のどれにも当たらなければ、その書き込みを止めます。
 
-    <インスタンスのルート>\<タスクフォルダ>\out\ の中
+    <インスタンスのルート>\<タスクフォルダ>\out\ の中（out2、out3 … のように、out に数字だけを付けたフォルダも同じ）
     <インスタンスのルート>\PROFILE.md
     <インスタンスのルート>\.claude\skills\ の中
 
   インスタンスのルートは、このスクリプトの2つ上のフォルダです（.ai-desk\VERSION があること）。
   タスクフォルダは、ルート直下のフォルダのうち、次を除いたものです。
-    名前が . で始まるもの（.claude、.ai-desk など） / bin / task_template / out
+    名前が . で始まるもの（.claude、.ai-desk など） / bin / 00_タスクテンプレート / out（out2 なども）
+    task_template（1.0.0 のテンプレートの置き場。更新しても消えずに残るため）
 
   ネットワークドライブの上の AI-DESK では、Z:\... と \\サーバー\共有\... の2つの書き方が
   混ざることがあります。その場合は、両方を \\サーバー\共有\... の形に揃えてから比べます。
@@ -47,7 +48,7 @@ function Stop-Write {
 
     $rootText = if ($script:Root) { $script:Root } else { '<インスタンスのルート>' }
     $message = 'AI-DESK の書き込み制限で、この書き込みを止めました。' + $Reason +
-        ' 書けるのは、この AI-DESK（' + $rootText + '）の「<タスクフォルダ>\out\ の中」「PROFILE.md」' +
+        ' 書けるのは、この AI-DESK（' + $rootText + '）の「<タスクフォルダ>\out\ の中（out2\ など、out に数字を付けたフォルダも同じ）」「PROFILE.md」' +
         '「.claude\skills\ の中」だけです。' +
         '別のツール、シェルのコマンド、プログラムで書き直そうとせず、このことをユーザーに報告してください。'
 
@@ -132,13 +133,17 @@ function Get-WriteDecision {
     $parts = @($Target.Substring($prefix.Length).Split('\') | Where-Object { $_ -ne '' })
     if ($parts.Count -eq 0) { return ('書き込み先 ' + $Target + ' は、ファイルではありません。') }
 
+    # out と、out2・out3 … のように out に数字だけを付けた名前（大文字小文字は問わない）
+    $outName = '^out[0-9]*$'
+
     $first = $parts[0]
     $isTaskFolder = -not ($first.StartsWith('.') -or ($first -ieq 'bin') -or
-                          ($first -ieq 'task_template') -or ($first -ieq 'out'))
+                          ($first -ieq '00_タスクテンプレート') -or ($first -ieq 'task_template') -or
+                          ($first -imatch $outName))
 
     $allowed = (($parts.Count -eq 1) -and ($first -ieq 'PROFILE.md')) -or
                (($parts.Count -ge 3) -and ($first -ieq '.claude') -and ($parts[1] -ieq 'skills')) -or
-               (($parts.Count -ge 3) -and $isTaskFolder -and ($parts[1] -ieq 'out'))
+               (($parts.Count -ge 3) -and $isTaskFolder -and ($parts[1] -imatch $outName))
 
     if (-not $allowed) {
         return ('書き込み先 ' + $Target + ' は、書いてよい場所ではありません。')

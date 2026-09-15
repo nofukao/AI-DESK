@@ -1,10 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Edit(*/out/**)"
+      "Edit(*/out/**)",
+      "Edit(*/out[0-9]*/**)"
     ],
     "deny": [
       "Edit(/out/**)",
+      "Edit(/out[0-9]*/**)",
       "Edit(/CLAUDE.md)",
       "Edit(/GEMINI.md)",
       "Edit(/README.md)",
@@ -14,6 +16,7 @@
       "Edit(/.claude/hooks/**)",
       "Edit(/.ai-desk/**)",
       "Edit(/bin/**)",
+      "Edit(/00_タスクテンプレート/**)",
       "Edit(/task_template/**)",
       "Bash(rm:*)",
       "Bash(rmdir:*)",
