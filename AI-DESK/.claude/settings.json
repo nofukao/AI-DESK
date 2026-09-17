@@ -1,12 +1,15 @@
 {
   "permissions": {
     "allow": [
-      "Edit(*/out/**)",
-      "Edit(*/out[0-9]*/**)"
+      "Edit(*/[0-9][0-9]A_*)",
+      "Edit(*/[0-9][0-9]B_*)",
+      "Edit(*/[0-9][0-9]B_*/**)",
+      "Edit(*/00_作業記録.md)",
+      "Edit(*/材料/**)"
     ],
     "deny": [
-      "Edit(/out/**)",
-      "Edit(/out[0-9]*/**)",
+      "Edit(/00_TASK.md)",
+      "Edit(*/00_TASK.md)",
       "Edit(/CLAUDE.md)",
       "Edit(/GEMINI.md)",
       "Edit(/README.md)",
@@ -17,7 +20,6 @@
       "Edit(/.ai-desk/**)",
       "Edit(/bin/**)",
       "Edit(/00_タスクテンプレート/**)",
-      "Edit(/task_template/**)",
       "Bash(rm:*)",
       "Bash(rmdir:*)",
       "Bash(mv:*)",
