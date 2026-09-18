@@ -6,14 +6,26 @@
   AI がファイルを書く直前（Edit / Write / NotebookEdit）に書き込み先を調べ、
   次のどれにも当たらなければ、その書き込みを止めます。
 
-    <インスタンスのルート>\<タスクフォルダ>\out\ の中（out2、out3 … のように、out に数字だけを付けたフォルダも同じ）
+    <インスタンスのルート>\<タスクフォルダ>\ の中の、決まった名前のもの（下記）
     <インスタンスのルート>\PROFILE.md
     <インスタンスのルート>\.claude\skills\ の中
 
   インスタンスのルートは、このスクリプトの2つ上のフォルダです（.ai-desk\VERSION があること）。
   タスクフォルダは、ルート直下のフォルダのうち、次を除いたものです。
     名前が . で始まるもの（.claude、.ai-desk など） / bin / 00_タスクテンプレート / out（out2 なども）
-    task_template（1.0.0 のテンプレートの置き場。更新しても消えずに残るため）
+
+  タスクフォルダの中で書いてよい名前は、次だけです。**場所だけでなく、名前でも判定します。**
+
+    00_ で始まるファイル           タスク全体の記録（00_作業記録.md など）
+    NNA_ / NNB_ で始まるファイル   その回の依頼（A）と成果物（B）
+    NNB_ で始まるフォルダの中      1回で3つ以上出すときの、まとめ先
+    材料\ の中                     スクリプト・中間データ・バックアップ
+
+    ただし 00_TASK.md は書けません。人が書く依頼の原本だからです。
+    AI が書く依頼の記録は NNA_依頼内容.md の方です。
+
+  名前でも判定するのは、タスクフォルダの中に、人が置いたもの（00_TASK.md、
+  参考に置いた資料など）が混ざるためです。場所だけで判定すると、それらを上書きできてしまいます。
 
   ネットワークドライブの上の AI-DESK では、Z:\... と \\サーバー\共有\... の2つの書き方が
   混ざることがあります。その場合は、両方を \\サーバー\共有\... の形に揃えてから比べます。
@@ -25,6 +37,7 @@
     - PowerShell が起動できない、時間切れになった、といった場合は、書き込みは止まりません
     - 見張れるのは、AI が直接書くファイルだけです。
       シェルのコマンドや、Python などのプログラムが書くファイルは見張れません
+    - 名前は見ますが、回次の番号が正しいか（第2回なのに 01B_ になっていないか）は見ません
 
   このスクリプトは、ファイルの作成・変更・削除を一切行いません。
   配布物です。インスタンスの中で直さないでください（次の更新で上書きされます）。
@@ -34,6 +47,14 @@ $ErrorActionPreference = 'Stop'
 
 $Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 $script:Root = $null
+
+# 名前の決まり（大文字・小文字は問いません）
+$script:OutNamePattern     = '^out[0-9]*$'       # 1.1.0 までの出力先。いまは使いません
+$script:TaskFilePattern    = '^00_'              # タスク全体の記録
+$script:RoundFilePattern   = '^[0-9]{2,}[AB]_'   # その回の依頼（A）と成果物（B）
+$script:RoundFolderPattern = '^[0-9]{2,}B_'      # 1回で3つ以上出すときの、まとめ先
+$script:MaterialFolderName = '材料'              # スクリプト・中間データ・バックアップ
+$script:TaskMdPattern      = '^00_task\.md$'     # 人が書く依頼の原本。AI は書けません
 
 function Write-Utf8 {
     param([System.IO.Stream]$Stream, [string]$Text)
@@ -48,8 +69,10 @@ function Stop-Write {
 
     $rootText = if ($script:Root) { $script:Root } else { '<インスタンスのルート>' }
     $message = 'AI-DESK の書き込み制限で、この書き込みを止めました。' + $Reason +
-        ' 書けるのは、この AI-DESK（' + $rootText + '）の「<タスクフォルダ>\out\ の中（out2\ など、out に数字を付けたフォルダも同じ）」「PROFILE.md」' +
-        '「.claude\skills\ の中」だけです。' +
+        ' 書けるのは、この AI-DESK（' + $rootText + '）の中の次だけです。' +
+        '「<タスクフォルダ>\ の中の、00_ で始まるファイル・NNA_ / NNB_ で始まるファイル・' +
+        'NNB_ で始まるフォルダの中・材料\ の中（ただし 00_TASK.md を除く）」' +
+        '「PROFILE.md」「.claude\skills\ の中」。' +
         '別のツール、シェルのコマンド、プログラムで書き直そうとせず、このことをユーザーに報告してください。'
 
     $decision = @{
@@ -115,6 +138,52 @@ function ConvertTo-UncPath {
     return $FullPath
 }
 
+function Test-TaskFolderName {
+    # ルート直下のこの名前は、タスクフォルダか
+    param([string]$Name)
+
+    if ($Name.StartsWith('.')) { return $false }
+    if ($Name -ieq 'bin') { return $false }
+    if ($Name -ieq '00_タスクテンプレート') { return $false }
+    if ($Name -imatch $script:OutNamePattern) { return $false }
+    return $true
+}
+
+function Get-NameDecision {
+    # タスクフォルダの中の、名前だけの判定。
+    # 書いてよければ $null を、止めるべきなら理由の文を返す。
+    param([string[]]$Parts)   # タスクフォルダ名を除いた、その中での並び
+
+    if ($null -eq $Parts -or $Parts.Count -eq 0) {
+        return 'タスクフォルダそのものは、ファイルではありません。'
+    }
+
+    $head = $Parts[0]
+
+    if ($Parts.Count -eq 1) {
+        # タスクフォルダの直下に置くファイル
+        if ($head -imatch $script:TaskMdPattern) {
+            return '「00_TASK.md」は、人が書く依頼の原本です。AI は書けません。' +
+                   'その回に頼まれたことは「NNA_依頼内容.md」に書いてください。'
+        }
+        if ($head -imatch $script:TaskFilePattern) { return $null }
+        if ($head -imatch $script:RoundFilePattern) { return $null }
+        return 'タスクフォルダの直下に置けるのは、「00_」で始まる名前（00_作業記録.md など）と、' +
+               '「01A_」「01B_」のように回次と A / B で始まる名前だけです。' +
+               '「NNA_依頼内容.md」「NNB_内容を表す日本語名_YYYY-MM-DD.拡張子」の形にしてください。'
+    }
+
+    # タスクフォルダの直下にあるフォルダの、中
+    if ($head -ieq $script:MaterialFolderName) { return $null }
+    if ($head -imatch $script:RoundFolderPattern) { return $null }
+    if ($head -imatch $script:OutNamePattern) {
+        return 'この版では「out」を使いません。成果物は、タスクフォルダの直下に ' +
+               '「NNB_内容を表す日本語名_YYYY-MM-DD.拡張子」の名前で出してください。'
+    }
+    return 'タスクフォルダの中に置けるフォルダは、「材料」と、' +
+           '1回で3つ以上出すときの「NNB_タイトル_YYYY-MM-DD」だけです。'
+}
+
 function Get-WriteDecision {
     # 書いてよければ $null を、止めるべきなら理由の文を返す。
     param([string]$Root, [string]$Target)
@@ -133,24 +202,27 @@ function Get-WriteDecision {
     $parts = @($Target.Substring($prefix.Length).Split('\') | Where-Object { $_ -ne '' })
     if ($parts.Count -eq 0) { return ('書き込み先 ' + $Target + ' は、ファイルではありません。') }
 
-    # out と、out2・out3 … のように out に数字だけを付けた名前（大文字小文字は問わない）
-    $outName = '^out[0-9]*$'
-
     $first = $parts[0]
-    $isTaskFolder = -not ($first.StartsWith('.') -or ($first -ieq 'bin') -or
-                          ($first -ieq '00_タスクテンプレート') -or ($first -ieq 'task_template') -or
-                          ($first -imatch $outName))
 
-    $allowed = (($parts.Count -eq 1) -and ($first -ieq 'PROFILE.md')) -or
-               (($parts.Count -ge 3) -and ($first -ieq '.claude') -and ($parts[1] -ieq 'skills')) -or
-               (($parts.Count -ge 3) -and $isTaskFolder -and ($parts[1] -imatch $outName))
-
-    if (-not $allowed) {
+    if (($parts.Count -eq 1) -and ($first -ieq 'PROFILE.md')) {
+        # そのまま、下のリンクの検査へ
+    }
+    elseif (($parts.Count -ge 3) -and ($first -ieq '.claude') -and ($parts[1] -ieq 'skills')) {
+        # そのまま、下のリンクの検査へ
+    }
+    elseif (Test-TaskFolderName $first) {
+        $rest = @($parts | Select-Object -Skip 1)
+        $nameReason = Get-NameDecision -Parts $rest
+        if ($nameReason) {
+            return ('書き込み先 ' + $Target + ' は、書いてよい名前ではありません。' + $nameReason)
+        }
+    }
+    else {
         return ('書き込み先 ' + $Target + ' は、書いてよい場所ではありません。')
     }
 
     # 途中に、別の場所へのリンクが無いか。
-    # out の中にジャンクションやシンボリックリンクがあると、見た目は out の中でも、
+    # タスクフォルダの中にジャンクションやシンボリックリンクがあると、見た目はタスクフォルダの中でも、
     # 実際には別の場所（資料フォルダなど）に書き込まれるためです。
     $current = $prefix.TrimEnd('\')
     foreach ($part in $parts) {
