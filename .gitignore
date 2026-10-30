@@ -35,6 +35,9 @@
 !/AI-DESK/00_タスクテンプレート/
 !/AI-DESK/00_タスクテンプレート/**
 
+!/AI-DESK/_保管庫/
+!/AI-DESK/_保管庫/README.md
+
 # ── 2. サイト固有ファイル（配布しない・公開しない）──────────
 PROFILE.md
 settings.local.json
