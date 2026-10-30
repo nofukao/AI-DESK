@@ -11,8 +11,13 @@
     <インスタンスのルート>\.claude\skills\ の中
 
   インスタンスのルートは、このスクリプトの2つ上のフォルダです（.ai-desk\VERSION があること）。
-  タスクフォルダは、ルート直下のフォルダのうち、次を除いたものです。
-    名前が . で始まるもの（.claude、.ai-desk など） / bin / 00_タスクテンプレート / out（out2 なども）
+  タスクフォルダは、次のどちらかです。
+    ルート直下のフォルダ
+    ルート直下の保管フォルダ（名前が _保管 で始まるもの）の、直下のフォルダ
+  どちらの場合も、次の名前はタスクフォルダではありません。
+    名前が . で始まるもの（.claude、.ai-desk など） / bin / 00_タスクテンプレート / out（out2 なども） /
+    名前が _保管 で始まるもの（保管フォルダそのもの。保管フォルダの中に、保管フォルダは作れません）
+  保管フォルダの直下に置けるのは、タスクフォルダだけです（ファイルは置けません）。
 
   タスクフォルダの中で書いてよい名前は、次だけです。**場所だけでなく、名前でも判定します。**
 
@@ -55,6 +60,7 @@ $script:RoundFilePattern   = '^[0-9]{2,}[AB]_'   # その回の依頼（A）と�
 $script:RoundFolderPattern = '^[0-9]{2,}B_'      # 1回で3つ以上出すときの、まとめ先
 $script:MaterialFolderName = '材料'              # スクリプト・中間データ・バックアップ
 $script:TaskMdPattern      = '^00_task\.md$'     # 人が書く依頼の原本。AI は書けません
+$script:ArchivePattern     = '^_保管'             # 保管フォルダ。タスクフォルダをまとめて置く入れ物
 
 function Write-Utf8 {
     param([System.IO.Stream]$Stream, [string]$Text)
@@ -70,7 +76,8 @@ function Stop-Write {
     $rootText = if ($script:Root) { $script:Root } else { '<インスタンスのルート>' }
     $message = 'AI-DESK の書き込み制限で、この書き込みを止めました。' + $Reason +
         ' 書けるのは、この AI-DESK（' + $rootText + '）の中の次だけです。' +
-        '「<タスクフォルダ>\ の中の、00_ で始まるファイル・NNA_ / NNB_ で始まるファイル・' +
+        '「<タスクフォルダ>\ の中の（保管フォルダ _保管…\ の中のタスクフォルダも同じ）、' +
+        '00_ で始まるファイル・NNA_ / NNB_ で始まるファイル・' +
         'NNB_ で始まるフォルダの中・材料\ の中（ただし 00_TASK.md を除く）」' +
         '「PROFILE.md」「.claude\skills\ の中」。' +
         '別のツール、シェルのコマンド、プログラムで書き直そうとせず、このことをユーザーに報告してください。'
@@ -139,14 +146,38 @@ function ConvertTo-UncPath {
 }
 
 function Test-TaskFolderName {
-    # ルート直下のこの名前は、タスクフォルダか
+    # この名前は、タスクフォルダになれるか（ルート直下でも、保管フォルダの直下でも同じ）
     param([string]$Name)
 
     if ($Name.StartsWith('.')) { return $false }
     if ($Name -ieq 'bin') { return $false }
     if ($Name -ieq '00_タスクテンプレート') { return $false }
     if ($Name -imatch $script:OutNamePattern) { return $false }
+    if ($Name -imatch $script:ArchivePattern) { return $false }
     return $true
+}
+
+function Get-TaskFolderDepth {
+    # ルートからの並びのうち、何番目までがタスクフォルダか（1 か 2）。
+    # タスクフォルダが無ければ、止める理由の補足（文字列。補足が無ければ空）を返す。
+    param([string[]]$Parts)
+
+    $first = $Parts[0]
+    if (Test-TaskFolderName $first) { return 1 }
+    if (-not ($first -imatch $script:ArchivePattern)) { return '' }
+
+    # 保管フォルダ（_保管…）の中
+    if ($Parts.Count -lt 3) {
+        return ('「' + $first + '」は保管フォルダです。保管フォルダの直下には、タスクフォルダしか置けません。')
+    }
+    $second = $Parts[1]
+    if ($second -imatch $script:ArchivePattern) {
+        return '保管フォルダの中に、保管フォルダは作れません。'
+    }
+    if (-not (Test-TaskFolderName $second)) {
+        return ('「' + $second + '」は、タスクフォルダに使えない名前です。')
+    }
+    return 2
 }
 
 function Get-NameDecision {
@@ -210,15 +241,16 @@ function Get-WriteDecision {
     elseif (($parts.Count -ge 3) -and ($first -ieq '.claude') -and ($parts[1] -ieq 'skills')) {
         # そのまま、下のリンクの検査へ
     }
-    elseif (Test-TaskFolderName $first) {
-        $rest = @($parts | Select-Object -Skip 1)
+    else {
+        $depth = Get-TaskFolderDepth -Parts $parts
+        if ($depth -is [string]) {
+            return ('書き込み先 ' + $Target + ' は、書いてよい場所ではありません。' + $depth)
+        }
+        $rest = @($parts | Select-Object -Skip $depth)
         $nameReason = Get-NameDecision -Parts $rest
         if ($nameReason) {
             return ('書き込み先 ' + $Target + ' は、書いてよい名前ではありません。' + $nameReason)
         }
-    }
-    else {
-        return ('書き込み先 ' + $Target + ' は、書いてよい場所ではありません。')
     }
 
     # 途中に、別の場所へのリンクが無いか。
