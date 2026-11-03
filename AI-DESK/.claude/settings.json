@@ -10,6 +10,7 @@
     "deny": [
       "Edit(/00_TASK.md)",
       "Edit(*/00_TASK.md)",
+      "Edit(/AGENTS.md)",
       "Edit(/CLAUDE.md)",
       "Edit(/GEMINI.md)",
       "Edit(/README.md)",

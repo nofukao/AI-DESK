@@ -25,7 +25,8 @@
               |  new-instance.ps1 / update-instance.ps1
               v
   <任意の場所>\AI-DESK1\      ← インスタンス（業務で使う）
-      CLAUDE.md              配布物のコピー
+      AGENTS.md              配布物のコピー（AI 向けの規則の本文）
+      CLAUDE.md・GEMINI.md   配布物のコピー（規則への案内板。Claude Code 用・Antigravity 用）
       PROFILE.md             ★この組織の前提知識（配布されない）
       .claude\hooks\         書き込み先と名前を限る仕組み
       .ai-desk\VERSION       ★ここがインスタンスのルートだという目印
@@ -52,7 +53,7 @@
 そこに `.git` があると、誰かが `git add .` と `git push` をした瞬間に外部へ出ます。
 **push は実質的に取り消せません。**
 
-配布物 `AI-DESK\CLAUDE.md` の「絶対遵守ルール2: Git の不使用」は、これを防ぐためのものです。
+配布物 `AI-DESK\AGENTS.md` の「絶対遵守ルール2: Git の不使用」は、これを防ぐためのものです。
 **開発リポジトリだけが例外**として git を使います。
 
 ---
@@ -123,7 +124,7 @@ AI-DESK は自動で直しますが、**それ以外のフォルダでも同じ�
 
 ## 版ずれについて
 
-`CLAUDE.md` はインスタンスの数だけコピーが存在するため、**必ず版がずれます。**
+規則（`AGENTS.md`）はインスタンスの数だけコピーが存在するため、**必ず版がずれます。**
 受け止め方を決めてあります。
 
 1. `.ai-desk\VERSION` に版番号を持つ
