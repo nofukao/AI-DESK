@@ -1,4 +1,4 @@
-<!-- AI-DESK-PROFILE-EXAMPLE: これは記入例です。中身を書き換えたら、この行を消してください -->
+> AI-DESK-PROFILE-EXAMPLE: これは記入例です。中身を書き換えたら、この行を消してください
 
 # PROFILE.md（この組織の前提知識）
 
